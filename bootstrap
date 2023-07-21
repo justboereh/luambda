@@ -1,0 +1,36 @@
+#!/bin/sh
+
+while true
+do
+  HEADERS="$(mktemp)"
+  # Get an event. The HTTP request will block until one is received
+  EVENT_DATA=$(curl -sS -LD "$HEADERS" -X GET "http://${AWS_LAMBDA_RUNTIME_API}/2018-06-01/runtime/invocation/next")
+
+  # Extract request ID by scraping response headers received above
+  REQUEST_ID=$(grep -Fi Lambda-Runtime-Aws-Request-Id "$HEADERS" | tr -d '[:space:]' | cut -d: -f2)
+
+  echo "$EVENT_DATA" >> /tmp/invocation_event.log
+  echo "$LAMBDA_TASK_ROOT" >> /tmp/invocation_root.log
+
+  # Execute the handler function from the script
+  /opt/runtime/luvi /opt/runtime
+
+  rm /tmp/invocation_event.log
+  rm /tmp/invocation_root.log
+
+  if [ -f /tmp/lua_result.log ]; then
+    RESPONSE=$(</tmp/lua_result.log)
+
+    # Send the response
+    curl -X POST "http://${AWS_LAMBDA_RUNTIME_API}/2018-06-01/runtime/invocation/$REQUEST_ID/response"  -d "$RESPONSE"
+    rm /tmp/lua_result.log
+  fi
+
+  if [ -f /tmp/lua_result_err.log ]; then
+    # Handle error
+    RESPONSE_ERR=$(</tmp/lua_result_err.log)
+    curl -X POST "http://${AWS_LAMBDA_RUNTIME_API}/2018-06-01/runtime/invocation/$REQUEST_ID/error"  -d "$RESPONSE_ERR"
+    rm /tmp/lua_result_err.log
+  fi
+
+done
