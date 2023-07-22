@@ -5,7 +5,10 @@ local ROOT = io.open("/tmp/invocation_root.log", "r"):read('a')
 
 package.path = ROOT .. '/?.lua;/opt/runtime/?.lua;/opt/runtime/?.out;' .. package.path
 
-local JSON = require('deps/json')
+local JSON = require('deps.json')
+local Request = require('deps.request')
+local Response = require('deps.request')
+local KV = require('deps.kv')
 
 local function WriteFile(filename, contents)
     local file = io.open(filename, "w")
@@ -20,29 +23,9 @@ local function RunTask()
     local module = require('function')
     if (not module or type(module) ~= "function") then error('invalid lua code') end
 
-    local Event = JSON.decode(EVENTJSON) or {}
-
-	local Request = {
-		query = Event.queryStringParameters,
-        method = Event.requestContext.http.method,
-        path = Event.requestContext.http.path,
-        userAgent = Event.requestContext.http.userAgent,
-        sourceIp = Event.requestContext.http.sourceIp,
-		body = Event.body,
-		headers = { }
-    }
+    module(Request(EVENTJSON), Response, KV)
 	
-	for name, value in pairs(Event.headers or {}) do
-		if name:find('x-amzn') then goto continue end
-		if name == 'x-forwarded-for' then goto continue end
-		if name == 'host' then goto continue end
-
-		Request.headers[name] = value
-
-		::continue::
-	end
-
-	return module(Request)
+	return Response
 end
 
 local function Run()

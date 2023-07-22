@@ -1,0 +1,13 @@
+{
+  "name": "luambda",
+  "version": "0.1.0",
+  "main": "upload.js",
+  "type": "module",
+  "keywords": [],
+  "author": "justboereh",
+  "dependencies": {
+    "@aws-sdk/client-lambda": "^3.370.0",
+    "dotenv": "^16.3.1",
+    "jszip": "^3.10.1"
+  }
+}

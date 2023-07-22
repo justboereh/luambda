@@ -13,7 +13,7 @@ do
   echo "$LAMBDA_TASK_ROOT" >> /tmp/invocation_root.log
 
   # Execute the handler function from the script
-  /opt/runtime/luvi /opt/runtime
+  /opt/runtime/lua54 /opt/runtime
 
   rm /tmp/invocation_event.log
   rm /tmp/invocation_root.log
