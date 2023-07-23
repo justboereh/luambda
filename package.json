@@ -8,6 +8,7 @@
   "dependencies": {
     "@aws-sdk/client-lambda": "^3.370.0",
     "dotenv": "^16.3.1",
+    "hono": "^3.3.2",
     "jszip": "^3.10.1"
   }
 }
